@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install poetry
+RUN pip install --no-cache-dir poetry
+
+# Copy stage 1 files
+COPY 01_RealTime_Tripwire/ /app/
+
+# Install dependencies via poetry
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-dev
+
+# Set entrypoint
+ENTRYPOINT ["python", "urs/Urs.py"]

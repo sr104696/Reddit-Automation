@@ -1,0 +1,12 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy Stage 5 backend files
+COPY 05_Conversational_RAG_Interface/backend/ /app/
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Entrypoint
+ENTRYPOINT ["python", "main.py"]

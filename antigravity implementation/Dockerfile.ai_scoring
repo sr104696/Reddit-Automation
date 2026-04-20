@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy Stage 4 files
+COPY 04_AI_Scoring_Layer/ /app/
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Set environment variables for DB access
+ENV SHARED_DB_PATH=/data/shared_db/reddit_automation.db
+
+# Entrypoint for the batch worker (can be overridden)
+ENTRYPOINT ["python", "gpt/batch_api.py"]

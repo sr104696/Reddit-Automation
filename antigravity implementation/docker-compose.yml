@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  tripwire:
+    build:
+      context: ..
+      dockerfile: antigravity implementation/Dockerfile.tripwire
+    container_name: reddit_tripwire
+    env_file: .env.example
+    networks:
+      - reddit_net
+    volumes:
+      - shared_db:/data/shared_db
+    restart: always
+
+  extractor_api:
+    build:
+      context: ../02_Heavy_Extractor
+    container_name: reddit_extractor
+    ports:
+      - "8000:8000"
+    env_file: .env.example
+    networks:
+      - reddit_net
+    volumes:
+      - shared_db:/data/shared_db
+    command: uvicorn api.server:app --host 0.0.0.0 --port 8000
+
+  airflow-webserver:
+    build:
+      context: ../03_Reasoning_Orchestrator
+    container_name: airflow_webserver
+    ports:
+      - "8080:8080"
+    env_file: .env.example
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    networks:
+      - reddit_net
+    volumes:
+      - shared_db:/data/shared_db
+      - ../03_Reasoning_Orchestrator/dags:/opt/airflow/dags
+    command: webserver
+    depends_on:
+      - extractor_api
+
+  airflow-scheduler:
+    build:
+      context: ../03_Reasoning_Orchestrator
+    container_name: airflow_scheduler
+    env_file: .env.example
+    networks:
+      - reddit_net
+    volumes:
+      - shared_db:/data/shared_db
+      - ../03_Reasoning_Orchestrator/dags:/opt/airflow/dags
+    command: scheduler
+    depends_on:
+      - airflow-webserver
+
+  ai_batch_worker:
+    build:
+      context: ..
+      dockerfile: antigravity implementation/Dockerfile.ai_scoring
+    container_name: reddit_ai_batch
+    env_file: .env.example
+    networks:
+      - reddit_net
+    volumes:
+      - shared_db:/data/shared_db
+    command: python gui/main.py  # Adjust if a non-GUI entrypoint is preferred for worker
+
+  rag_backend:
+    build:
+      context: ..
+      dockerfile: antigravity implementation/Dockerfile.rag
+    container_name: reddit_rag_backend
+    ports:
+      - "8001:8000"
+    env_file: .env.example
+    networks:
+      - reddit_net
+    volumes:
+      - shared_db:/data/shared_db
+    command: python backend/main.py
+
+  rss_server:
+    build:
+      context: ../06_Executive_Summary
+    container_name: reddit_rss
+    ports:
+      - "8081:80"
+    env_file: .env.example
+    networks:
+      - reddit_net
+    volumes:
+      - shared_db:/data/shared_db
+
+networks:
+  reddit_net:
+    driver: bridge
+
+volumes:
+  shared_db:
