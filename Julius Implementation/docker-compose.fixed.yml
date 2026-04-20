@@ -1,0 +1,27 @@
+version: '3.9'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.rag
+    ports:
+      - '8000:8000'
+    environment:
+      PORT: 8000
+      SHARED_DB_PATH: /data/shared_db/reddit_automation.db
+    volumes:
+      - ./:/app
+      - shared_db:/data/shared_db
+    command: ["python", "server_fixed.py"]
+
+  tripwire:
+    build:
+      context: .
+      dockerfile: Dockerfile.tripwire
+    environment:
+      LIVESTREAM_MAX_LOOPS: 1
+    volumes:
+      - ./:/app
+
+volumes:
+  shared_db:
