@@ -1,0 +1,141 @@
+version: '3.8'
+
+x-airflow-common:
+  &airflow-common
+  build:
+    context: ./03_Reasoning_Orchestrator
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////usr/local/airflow/airflow.db
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    SHARED_DB_PATH: /data/shared_db/reddit_leads.db
+  volumes:
+    - ./03_Reasoning_Orchestrator/dags:/usr/local/airflow/dags
+    - shared_data:/data/shared_db
+  networks:
+    - reddit_net
+
+services:
+  # Stage 1: The Tripwire
+  tripwire:
+    build:
+      context: ./01_RealTime_Tripwire
+    container_name: tripwire
+    env_file: .env
+    volumes:
+      - ./01_RealTime_Tripwire:/app
+    networks:
+      - reddit_net
+    command: python -m urs.Urs --live-subreddit python
+
+  # Stage 2: The Extractor
+  extractor_api:
+    build:
+      context: ./02_Heavy_Extractor
+    container_name: extractor_api
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./02_Heavy_Extractor:/app
+      - shared_data:/data/shared_db
+    networks:
+      - reddit_net
+    command: uvicorn api.server:app --host 0.0.0.0 --port 8000 --reload
+
+  # Stage 3: The Orchestrator (Airflow)
+  airflow_webserver:
+    <<: *airflow-common
+    container_name: airflow_webserver
+    ports:
+      - "8080:8080"
+    command: webserver
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  airflow_scheduler:
+    <<: *airflow-common
+    container_name: airflow_scheduler
+    command: scheduler
+
+  # Stage 4: Quantitative AI
+  ai_batch_worker:
+    build:
+      context: ./04_AI_Scoring_Layer
+    container_name: ai_batch_worker
+    env_file: .env
+    volumes:
+      - ./04_AI_Scoring_Layer:/app
+      - shared_data:/data/shared_db
+    networks:
+      - reddit_net
+    # Depending on how the worker is invoked, this command might change.
+    # Leaving standard entrypoint or keeping container alive for Airflow to exec into.
+    command: tail -f /dev/null
+
+  streamlit_dashboard:
+    build:
+      context: ./04_AI_Scoring_Layer
+    container_name: streamlit_dashboard
+    env_file: .env
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./04_AI_Scoring_Layer:/app
+      - shared_data:/data/shared_db
+    networks:
+      - reddit_net
+    command: streamlit run gui/gui.py --server.port 8501 --server.address 0.0.0.0
+
+  # Stage 5: Qualitative RAG
+  rag_backend:
+    build:
+      context: ./05_Conversational_RAG_Interface/backend
+    container_name: rag_backend
+    env_file: .env
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./05_Conversational_RAG_Interface/backend:/app
+      - shared_data:/data/shared_db
+    networks:
+      - reddit_net
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  nextjs_frontend:
+    build:
+      context: ./05_Conversational_RAG_Interface/frontend
+    container_name: nextjs_frontend
+    env_file: .env
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./05_Conversational_RAG_Interface/frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - reddit_net
+    command: npm run dev
+
+  # Stage 6: Executive Summary
+  rss_server:
+    build:
+      context: ./06_Executive_Summary
+    container_name: rss_server
+    ports:
+      - "8002:80"
+    volumes:
+      - shared_data:/data/shared_db
+    networks:
+      - reddit_net
+
+networks:
+  reddit_net:
+    driver: bridge
+
+volumes:
+  shared_data:

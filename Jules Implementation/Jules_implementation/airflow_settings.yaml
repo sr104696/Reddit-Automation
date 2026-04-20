@@ -1,0 +1,17 @@
+airflow:
+  connections:
+    - conn_id: extractor_api_conn
+      conn_type: http
+      conn_host: http://extractor_api
+      conn_port: 8000
+    - conn_id: rag_backend_conn
+      conn_type: http
+      conn_host: http://rag_backend
+      conn_port: 8000
+  pools:
+    - pool_name: ai_analysis_pool
+      pool_slot: 5
+      pool_description: Pool for AI analysis tasks
+  variables:
+    - variable_name: reddit_db_path
+      variable_value: /data/shared_db/reddit_leads.db
