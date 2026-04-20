@@ -1,0 +1,11 @@
+# Astro Runtime includes the following pre-installed providers packages: https://www.astronomer.io/docs/astro/runtime-image-architecture#provider-packages
+
+# Project-specific dependencies
+praw
+pandas
+python-dotenv
+duckdb
+apache-airflow-providers-openai
+ollama
+airflow-ai-sdk[openai]
+pydantic_ai

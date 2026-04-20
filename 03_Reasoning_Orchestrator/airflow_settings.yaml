@@ -1,0 +1,34 @@
+# This file allows you to configure Airflow Connections, Pools, and Variables in a single place for local development only.
+# NOTE: json dicts can be added to the conn_extra field as yaml key value pairs. See the example below.
+
+# For more information, refer to our docs: https://www.astronomer.io/docs/astro/cli/develop-project#configure-airflow_settingsyaml-local-development-only
+# For questions, reach out to: https://support.astronomer.io
+# For issues create an issue ticket here: https://github.com/astronomer/astro-cli/issues
+
+airflow:
+  connections:
+    - conn_id: ollama
+      conn_type: http
+      conn_host: localhost
+      conn_schema: http
+      conn_login:
+      conn_password:
+      conn_port: 11434
+      conn_extra:
+        model_name: llama2
+    - conn_id: duckdb
+      conn_type: duckdb
+      conn_host:
+      conn_schema:
+      conn_login:
+      conn_password:
+      conn_port:
+      conn_extra:
+        database_path: /usr/local/airflow/dags/data/eb1a_threads_data.duckdb
+  pools:
+    - pool_name: ai_analysis_pool
+      pool_slot: 5
+      pool_description: Pool for AI analysis tasks
+  variables:
+    - variable_name: reddit_db_path
+      variable_value: /usr/local/airflow/dags/data/eb1a_threads_data.duckdb

@@ -1,0 +1,45 @@
+Based on the following top-performing Reddit posts (titles and summaries), recommend a ranked list of 12 adjacent subreddits that are likely rich in product-worthy pain points and unmet needs.
+
+{SUMMARIES}
+
+IMPORTANT: Cast a WIDE net across wildly different domains. Do NOT cluster around tech/startup/developer communities. People spend money to solve problems in every area of life.
+
+Aim for this mix:
+- ~4 tech/startup/developer communities (tools, infrastructure, workflows)
+- ~4 consumer/lifestyle communities (parenting, health, personal finance, fitness, food, pets, hobbies)
+- ~4 niche/unexpected communities (trades, aging/eldercare, legal, real estate, education, specific health conditions, local services)
+
+Look for communities where people:
+- Spend money to solve problems or express frustration with existing paid solutions
+- Describe workarounds, time waste, or failed attempts to find tools
+- Discuss recurring operational pain (not just one-off questions)
+- Have high engagement around "how do you handle X?" or "is there a tool for Y?" threads
+
+For each recommended subreddit, provide:
+- A short rationale explaining WHY this community has product opportunities
+- An estimate of:
+  - % of posts with pain point signals
+  - % of comments asking for solutions
+  - Engagement level (low, medium, high)
+
+Exclude these types of communities entirely:
+- Legal/law-focused subreddits (e.g., r/lawyers, r/legaladvice)
+- Government policy/lobbying subreddits
+- Overseas supplier/import-export/contract subreddits
+
+Only include subreddits that:
+- Have active discussions about problems, workflows, or tool frustrations
+- Are active in the past month
+- Are not already on the main tracked list
+
+Respond in this format:
+[
+  {
+    "subreddit": "smallbusiness",
+    "reason": "Owners frequently discuss operational pain points and seek affordable tool recommendations.",
+    "pain_signal_pct": 55,
+    "solution_requests_pct": 45,
+    "engagement_level": "high"
+  },
+  ...
+]
